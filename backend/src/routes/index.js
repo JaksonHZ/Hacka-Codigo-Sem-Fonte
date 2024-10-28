@@ -37,5 +37,6 @@ router.get('/generate-pdf', GeneratePDFController.generatePDF);
 
 // Rotas para Tasks
 router.get('/api/tasks', verifyToken, TaskController.getAll)
+router.post('/api/tasks', verifyToken, TaskController.create)
 
 module.exports = router;

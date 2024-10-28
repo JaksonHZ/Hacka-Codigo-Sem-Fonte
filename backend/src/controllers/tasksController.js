@@ -14,6 +14,19 @@ class TaskController {
       res.status(500).json({ error: 'Erro ao buscar tarefas.' });
     }
   }
+
+  static async create(req, res) {
+    try {
+      // Cria uma nova tarefa no banco de dados
+      const task = await Task.create(req.body);
+
+      // Retorna a tarefa criada no formato JSON
+      res.status(201).json(task);
+    } catch (error) {
+      console.error('Erro ao criar tarefa:', error);
+      res.status(500).json({ error: 'Erro ao criar tarefa.' });
+    }
+  }
 }
 
 module.exports = TaskController;
