@@ -110,6 +110,13 @@ class TranscriptionController {
 
       console.log('Transcrição concluída e salva no banco de dados.');
 
+      // Adiciona uma nova etapa: Gera conteúdo com o GPT-4 a partir da transcrição
+      const generatedContent = await TranscriptionController.generateTextFromTranscription(transcriptionText);
+      console.log('Texto gerado pelo ChatGPT:', generatedContent);
+
+      transcription.transcriptionText = generatedContent;
+      await transcription.save();
+
     } catch (error) {
       // Em caso de erro, registra a falha e atualiza o status da transcrição para "falha"
       console.error('Erro ao processar transcrição:', error);
@@ -117,6 +124,79 @@ class TranscriptionController {
       await transcription.save();
     }
   }
+
+  // Novo método para enviar a transcrição para o ChatGPT e gerar conteúdo
+static async generateTextFromTranscription(transcriptionText) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `
+            Você é um assistente especializado para técnicos de manutenção de chão de fábrica. 
+            Sua função é gerar uma lista de tarefas (to-do list) clara e organizada a partir do seguinte texto transcrito. 
+            Além disso, você deve indicar quais categorias de ferramentas e equipamentos o técnico precisará pegar no almoxarifado.
+            Sua função é gerar um JSON estruturado com as seguintes chaves:
+            - "título": Um título breve e claro para a tarefa.
+            - "local": O local onde a tarefa precisa ser realizada, se disponível no texto.
+            - "descrição": Uma descrição detalhada que inclui uma lista de tarefas (to-do list) e qualquer outra informação relevante.
+            - "categorias": Um array com as categorias de ferramentas e equipamentos necessários, baseado no seguinte catálogo:
+
+            **Categorias de Ferramentas e Equipamentos:**
+            1. Ferramentas de Corte: 
+               Serra Circular, Disco de Corte, Serra de Fita, Disco de Desbaste, Broca de Aço Rápido 10mm, 
+               Conjunto de Fresas para Usinagem, Lâmina de Serra Sabre, Lixadeira Angular
+
+            2. Ferramentas de Medição: 
+               Paquímetro Digital, Micrômetro, Relógio Comparador, Trena de Aço 5m, Nível de Bolha, 
+               Goniômetro Digital, Manômetro para Pressão, Calibrador de Roscas
+
+            3. Equipamentos de Solda: 
+               Máquina de Solda MIG, Eletrodo de Solda Inox, Máscara de Solda Automática, Maçarico de Corte Oxiacetilênico, 
+               Tocha de Solda TIG, Fio de Solda MIG ER70S-6, Regulador de Pressão para Gás, Tubo de Gás Acetileno
+
+            4. Lubrificação e Manutenção: 
+               Graxa Industrial, Óleo Lubrificante 10W30, Bomba de Graxa Pneumática, Limpa Contatos Elétricos, 
+               Spray Desengripante, Veda Rosca em Fita
+
+            5. Equipamentos de Segurança: 
+               Capacete de Segurança com Aba, Luvas Térmicas de Alta Resistência, Óculos de Proteção Antirrespingos, 
+               Protetor Auricular Tipo Plug, Máscara Respiratória com Filtro P3, Cinto de Segurança para Trabalho em Altura, 
+               Sapato de Segurança com Biqueira de Aço, Protetor Facial de Policarbonato
+
+            6. Equipamentos de Elevação: 
+               Talha Elétrica de Corrente, Corrente de Elevação de 10m, Gancho Giratório com Trava de Segurança, 
+               Cinta de Elevação com Olhal, Carrinho de Transporte de Bobinas, Macaco Hidráulico 10 Toneladas
+
+            7. Componentes Mecânicos: 
+               Rolamento Esférico de Precisão, Parafuso de Alta Resistência M12, Correia de Transmissão Industrial, 
+               Junta de Vedação em Borracha, Engrenagem Cilíndrica de Aço, Bucha de Bronze Autolubrificante, 
+               Eixo de Transmissão, Polia de Alumínio
+
+            8. Equipamentos Hidráulicos: 
+               Válvula Solenoide Hidráulica, Bomba Hidráulica de Pistão, Mangueira Hidráulica de Alta Pressão, 
+               Conector Hidráulico Rápido
+
+            9. Equipamentos Elétricos: 
+               Motor Elétrico Trifásico 5HP, Cabo Elétrico 10mm², Disjuntor de 100A, Quadro de Comando Elétrico 
+               com Inversor de Frequência, Chave Seccionadora, Fusível NH 100A, Tomada Industrial 380V
+
+            10. Ferramentas Manuais: 
+               Chave de Fenda Phillips 6mm, Alicate de Corte, Martelo de Borracha, Torquímetro 40-200Nm, 
+               Conjunto de Chaves Allen, Chave Estrela 12mm, Serra Manual
+          `,
+        },
+        { role: 'user', content: transcriptionText },
+      ],
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('Erro ao gerar texto com GPT-4o:', error);
+    throw error;
+  }
+}
 
   // Método para converter o arquivo para MP3 usando o ffmpeg
   static convertToMp3(inputPath, outputPath) {
