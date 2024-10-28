@@ -1,0 +1,12 @@
+.containerButton {
+    display: flex;
+    width: 100%;
+    padding: 8px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    border-radius: 12px;
+    border: 1px solid #003B7A;
+    cursor: pointer;
+}
+
