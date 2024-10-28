@@ -7,6 +7,7 @@ const upload = require('../config/multer');
 
 const firebaseAuthController = require('../controllers/firebase-auth-controller');
 const verifyToken = require('../middleware/verifyToken');
+const TaskController = require('../controllers/tasksController');
 
 // Rotas públicas
 router.post('/api/register', firebaseAuthController.registerUser);
@@ -28,5 +29,8 @@ router.post('/api/transcriptions', verifyToken, upload.single('file'), Transcrip
 router.get('/api/transcriptions', verifyToken, TranscriptionController.getTranscriptions);
 router.get('/api/transcriptions/:id/download', verifyToken, TranscriptionController.downloadTranscription);
 router.get('/transcriptions/daily-limit', verifyToken, TranscriptionController.getDailyLimit);
+
+// Rotas para Tasks
+router.get('/api/tasks', verifyToken, TaskController.getAll)
 
 module.exports = router;
