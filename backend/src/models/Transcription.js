@@ -20,7 +20,7 @@ const Transcription = sequelize.define('Transcription', {
     defaultValue: 'processing', // processing, completed, failed
   },
   transcriptionText: {
-    type: DataTypes.TEXT,
+    type: DataTypes.STRING,
   },
   createdAt: {
     type: DataTypes.DATE,

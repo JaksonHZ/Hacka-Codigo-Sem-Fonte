@@ -6,6 +6,8 @@ const { OpenAI } = require('openai');
 const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
+const Task = require('../models/task');
+const ToolCategory = require('../models/toolCategory');
 
 // Inicializa a API do OpenAI para usar nas requisições de transcrição
 const openai = new OpenAI();
@@ -17,31 +19,6 @@ class TranscriptionController {
     const file = req.file;
     const userId = req.user.uid;
 
-    // Verificar cota do usuário
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reseta o horário para 00:00:00, comparando apenas a data
-
-    // Conta quantas transcrições o usuário já criou hoje
-    const count = await Transcription.count({
-      where: {
-        userId,
-        createdAt: {
-          [Op.gte]: today, // Contagem de transcrições criadas a partir de hoje
-        },
-      },
-    });
-
-    // Define o limite diário de transcrições (5 neste caso)
-    const DAILY_LIMIT = 5; 
-
-    // Se o usuário ultrapassou o limite, exclui o arquivo e retorna um erro 429
-    if (count >= DAILY_LIMIT) {
-      // Deleta o arquivo enviado
-      fs.unlinkSync(file.path);
-
-      return res.status(429).json({ error: 'Limite diário de transcrições atingido' });
-    }
-
     try {
       // Criar registro no banco de dados
       const transcription = await Transcription.create({
@@ -51,10 +28,10 @@ class TranscriptionController {
       
 
       // Iniciar processamento assíncrono
-      TranscriptionController.processTranscription(transcription, file.path);
+      await TranscriptionController.processTranscription(transcription, file.path);
 
       // Responde imediatamente ao usuário que o arquivo foi recebido e será processado
-      res.status(200).json({ message: 'Arquivo recebido e será processado', transcriptionId: transcription.id });
+      res.status(200).json(transcription.transcriptionText);
     } catch (error) {
       // Em caso de erro ao criar a transcrição, aparece o erro e responde com erro 500
       console.error('Erro ao criar transcrição:', error);
@@ -95,12 +72,8 @@ class TranscriptionController {
       } else {
         // Transcreve o arquivo diretamente
         transcriptionText = await TranscriptionController.transcribeWithOpenAI(mp3Path);
+        console.log('texto transcrito: ' + transcriptionText)
       }
-
-      // Atualiza o status da transcrição no banco de dados como "concluído" e salva o texto transcrito
-      transcription.status = 'completed';
-      transcription.transcriptionText = transcriptionText;
-      await transcription.save();
 
       // Remove os arquivos temporários (o original e o MP3)
       fs.unlinkSync(filePath);
@@ -108,14 +81,22 @@ class TranscriptionController {
         fs.unlinkSync(mp3Path);
       }
 
-      console.log('Transcrição concluída e salva no banco de dados.');
-
       // Adiciona uma nova etapa: Gera conteúdo com o GPT-4 a partir da transcrição
       const generatedContent = await TranscriptionController.generateTextFromTranscription(transcriptionText);
       console.log('Texto gerado pelo ChatGPT:', generatedContent);
 
+      // Atualiza o status da transcrição no banco de dados como "concluído" e salva o texto transcrito
+      transcription.status = 'completed';
       transcription.transcriptionText = generatedContent;
       await transcription.save();
+
+      // Chama a função para criar tarefas a partir da transcrição
+      await TranscriptionController.createTasksFromTranscription(transcription.id);
+
+      const tasks = Task.findAll()
+      console.log(tasks)
+
+      console.log('Transcrição concluída e salva no banco de dados.');
 
     } catch (error) {
       // Em caso de erro, registra a falha e atualiza o status da transcrição para "falha"
@@ -137,7 +118,7 @@ static async generateTextFromTranscription(transcriptionText) {
             Você é um assistente especializado para técnicos de manutenção de chão de fábrica. 
             Sua função é gerar uma lista de tarefas (to-do list) clara e organizada a partir do seguinte texto transcrito. 
             Além disso, você deve indicar quais categorias de ferramentas e equipamentos o técnico precisará pegar no almoxarifado.
-            Sua função é gerar um JSON estruturado com as seguintes chaves:
+            Sua função é gerar uma **string JSON válida** com a seguinte estrutura:
             - "título": Um título breve e claro para a tarefa.
             - "local": O local onde a tarefa precisa ser realizada, se disponível no texto.
             - "descrição": Uma descrição detalhada que inclui uma lista de tarefas (to-do list) e qualquer outra informação relevante.
@@ -185,7 +166,11 @@ static async generateTextFromTranscription(transcriptionText) {
             10. Ferramentas Manuais: 
                Chave de Fenda Phillips 6mm, Alicate de Corte, Martelo de Borracha, Torquímetro 40-200Nm, 
                Conjunto de Chaves Allen, Chave Estrela 12mm, Serra Manual
-          `,
+
+            A saída **deve ser uma única string JSON**. Não inclua quebras de linha ou indentação na resposta. Certifique-se de que a string JSON esteja no formato correto para ser parseada diretamente pelo JavaScript.
+            Exemplo da estrutura da string JSON esperada:
+            [{"título":"Lubrificação dos Rolamentos da Linha 3","local":"Linha 3","descrição":"Realizar a lubrificação dos rolamentos da máquina na linha 3 usando o lubrificante código azul 6624.","categorias":["Lubrificação", "Manutenção"]}]
+            `,
         },
         { role: 'user', content: transcriptionText },
       ],
@@ -195,6 +180,47 @@ static async generateTextFromTranscription(transcriptionText) {
   } catch (error) {
     console.error('Erro ao gerar texto com GPT-4o:', error);
     throw error;
+  }
+}
+
+static async createTasksFromTranscription(transcriptionId) {
+  try {
+    // 1. Recupera a transcrição pelo ID
+    const transcription = await Transcription.findByPk(transcriptionId, {raw: true});
+
+    if (!transcription) {
+      console.error('Transcrição não encontrada.');
+      return;
+    }
+
+    // 2. Extrai o JSON do campo transcriptionText
+    const tarefas  = JSON.parse(transcription.transcriptionText);
+
+    // 3. Itera sobre cada tarefa no JSON
+    for (const tarefa of tarefas) {
+      const { título, local, descrição } = tarefa;
+      const categorias = tarefa.categorias;
+
+      // 4. Cria a tarefa no banco de dados
+      const task = await Task.create({
+        title: título,
+        local: local,
+        description: descrição,
+        status: 'A FAZER',
+      });
+
+      // 5. Associa as categorias à tarefa
+      for (const categoryName of categorias) {
+        const [category] = await ToolCategory.findOrCreate({ where: { name: categoryName } });
+        await task.addToolCategory(category);
+      }
+
+      console.log(`Tarefa "${título}" criada com sucesso.`);
+    }
+
+    console.log('Todas as tarefas foram criadas com sucesso.');
+  } catch (error) {
+    console.error('Erro ao criar tarefas a partir da transcrição:', error);
   }
 }
 

@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const ToolCategory = require('./ToolCategory');
+const sequelize = require('./index');
+const ToolCategory = require('./toolCategory');
 
 const Tool = sequelize.define('Tool', {
   id: {
