@@ -9,6 +9,9 @@ const firebaseAuthController = require('../controllers/firebase-auth-controller'
 const verifyToken = require('../middleware/verifyToken');
 const TaskController = require('../controllers/tasksController');
 
+const GeneratePDFController = require('../controllers/generate-pdf');
+
+
 // Rotas públicas
 router.post('/api/register', firebaseAuthController.registerUser);
 router.post('/api/login', firebaseAuthController.loginUser);
@@ -29,6 +32,8 @@ router.post('/api/transcriptions', verifyToken, upload.single('file'), Transcrip
 router.get('/api/transcriptions', verifyToken, TranscriptionController.getTranscriptions);
 router.get('/api/transcriptions/:id/download', verifyToken, TranscriptionController.downloadTranscription);
 router.get('/transcriptions/daily-limit', verifyToken, TranscriptionController.getDailyLimit);
+router.get('/generate-pdf', GeneratePDFController.generatePDF);
+
 
 // Rotas para Tasks
 router.get('/api/tasks', verifyToken, TaskController.getAll)
