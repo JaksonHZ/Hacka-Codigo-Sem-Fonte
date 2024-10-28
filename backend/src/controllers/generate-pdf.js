@@ -1,6 +1,8 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-const Task = require('../models/Task'); 
+const Task = require('../models/task'); 
+const ToolCategory = require('../models/toolCategory'); 
+
 
 class GeneratePDFController{
     static async generatePDF(req, res){
@@ -19,9 +21,17 @@ class GeneratePDFController{
             doc.fontSize(18).text(`Lista de atividades - ${day}/${month}`, { align: 'center' });
             doc.moveDown();
       
-            const activities = await Task.findAll();
+            const activities = await Task.findAll({
+                where: {
+                    status: 'A FAZER'
+                },
+                include: {
+                    model: ToolCategory,
+                    through: { attributes: [] } 
+                }
+            });
 
-            activities.forEach((activity, index) => {
+            activities.forEach(async (activity, index) => {
                 doc.rect(30, doc.y, 15, 15).stroke();
                 doc.moveUp().moveDown(0.5);
         
@@ -38,11 +48,11 @@ class GeneratePDFController{
         
                 doc.text('Ferramentas:', 50, doc.y);
                 doc.moveDown();
-                activity.tools.forEach(tool => {
+                activity.ToolCategories.forEach(tool => {
                     doc.rect(50, doc.y, 10, 10).stroke(); 
                     doc.moveUp().moveDown(0.5);
                     
-                    doc.text(`${tool}`, 70, doc.y);
+                    doc.text(`${tool.name}`, 70, doc.y);
             
                     doc.moveDown(0.5);
                 });
