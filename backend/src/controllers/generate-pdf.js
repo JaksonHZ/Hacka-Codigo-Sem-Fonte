@@ -3,7 +3,6 @@ const fs = require('fs');
 const Task = require('../models/task'); 
 const ToolCategory = require('../models/toolCategory'); 
 
-
 class GeneratePDFController{
     static async generatePDF(req, res){
         try {

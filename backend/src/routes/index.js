@@ -7,6 +7,7 @@ const upload = require('../config/multer');
 
 const firebaseAuthController = require('../controllers/firebase-auth-controller');
 const verifyToken = require('../middleware/verifyToken');
+const TaskController = require('../controllers/tasksController');
 
 const GeneratePDFController = require('../controllers/generate-pdf');
 const TaskController = require('../controllers/task-controller');
@@ -36,5 +37,9 @@ router.get('/generate-pdf', GeneratePDFController.generatePDF);
 router.post('/tasks', TaskController.createTask);
 
 
+
+// Rotas para Tasks
+router.get('/api/tasks', verifyToken, TaskController.getAll)
+router.post('/api/tasks', verifyToken, TaskController.create)
 
 module.exports = router;
