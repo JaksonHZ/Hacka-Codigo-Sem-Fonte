@@ -1,0 +1,81 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 642px;
+    max-width: 90%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    row-gap: 1.5rem;
+}
+
+.close {
+    cursor: pointer;
+    align-self: flex-end;
+}  
+
+.frame {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2rem;
+    color: #636363;
+}
+
+.input {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #969595;
+    padding: 8px 12px;
+}
+
+.containerFields {
+    gap: 1rem;
+}
+
+.containerFields h5{
+    margin-bottom: 4px;
+}
+
+.containerFields h1 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.textarea {
+    width: 100%;      
+    height: 150px;      
+    resize: none;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

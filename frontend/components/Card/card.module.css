@@ -1,0 +1,44 @@
+.containerCard {
+    display: flex;
+    width: 340px;
+    padding: 12px;
+    flex-direction: column;
+    gap: 12px;
+    border-radius: var(--border-radius, 12px);
+    background: rgba(255, 255, 255, 0.60);
+    backdrop-filter: blur(25px);
+    color: #636363;
+    cursor: pointer;
+}
+
+.containerCard strong {
+    font-size: 19.2px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.loc {
+    display: flex;
+    align-items: center;
+    column-gap: 4px;
+    font-size: 19.2px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.ListaCategorias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.cardCategoria {
+    display: flex;
+    padding: 4px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    background: #FFEDCD;
+}
