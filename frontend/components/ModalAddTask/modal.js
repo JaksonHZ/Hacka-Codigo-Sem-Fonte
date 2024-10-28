@@ -1,30 +1,48 @@
 import styles from "./modal.module.css"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoIosClose } from "react-icons/io";
 import { BsPlusCircleFill } from "react-icons/bs";
 import Button from "../Button/button";
+import API from "../../axios/API";
 
 export default function Modal({ isOpen, onClose }) {
     if (!isOpen) return null;
-
-    const [fileName, setFileName] = useState("");
-    const [step, setStep] = useState(1)
+    const [file, setFile] = useState(null);
+    const [step, setStep] = useState(1);
+    const [task, setTask] = useState();
 
     const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setFileName(file.name);
-            console.log(file);
-        }
+      const selectedFile = event.target.files[0];
+      if (selectedFile) {
+        setFile(selectedFile);
+      }
     };
-
-    function submitFile(){
+  
+    const submitFile = async () => {
         setStep(0);
-
-        setTimeout(() => {
+      
+        if (file) {
+          const formData = new FormData();
+          formData.append('file', file);
+      
+          try {
+            const response = await API.post('/api/transcriptions', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+              withCredentials: true,
+            });
+      
+            console.log('Upload successful:', response.data);
+            setTask(response.data[0])
             setStep(2);
-        },4000)
-    }
+          } catch (error) {
+            console.error('Upload failed:', error);
+            setStep(1);
+          }
+        }
+      };
+      
 
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
@@ -71,6 +89,7 @@ export default function Modal({ isOpen, onClose }) {
                                 <input
                                     className={styles.input} 
                                     type="text"
+                                    value={task.title}
                                 />
                             </div>
 
@@ -80,6 +99,7 @@ export default function Modal({ isOpen, onClose }) {
                                 <input
                                     className={styles.input}
                                     type="text"
+                                    value={task.local}
                                 />
                             </div>
 
@@ -88,22 +108,68 @@ export default function Modal({ isOpen, onClose }) {
 
                                 <textarea 
                                     className={styles.textarea}
+                                    value={task.description}
                                 />
                             </div>
 
                             <div className={styles.containerFields}>
                                 <div className="div-5">
-                                <h5>Ferramentas</h5>
+                                    <h5>Ferramentas</h5>
 
-                                <p className="text-wrapper-3">
-                                    Selecione as ferramentas que você irá utilizar
-                                </p>
+                                    <p className="text-wrapper-3">
+                                        Selecione as ferramentas que você irá utilizar
+                                    </p>
+
+                                    <div className={styles.containerCheckbox}>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                            />
+                                            Serra Circular [MAT001]
+                                        </label>
+
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                            />
+                                            Alicate de Corte [MAT902]
+                                        </label>
+
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                            />
+                                            Serra Manual [MAT907]
+                                        </label>
+
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                            />
+                                            Torquímetro 40-200Nm [MAT904]
+                                        </label>
+
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                            />
+                                            Conjunto de Chaves Allen [MAT905]
+                                        </label>
+
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                            />
+                                            Disco de Corte [MAT002]
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
                             <Button
                                 icon={<BsPlusCircleFill color="#FFF" size={24}/>}
                                 text="SALVAR TAREFA"
+                                onClick={onClose}
                             />
                         </div>
                     </>

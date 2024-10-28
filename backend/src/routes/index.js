@@ -10,8 +10,6 @@ const verifyToken = require('../middleware/verifyToken');
 const TaskController = require('../controllers/tasksController');
 
 const GeneratePDFController = require('../controllers/generate-pdf');
-const TaskController = require('../controllers/task-controller');
-
 
 // Rotas públicas
 router.post('/api/register', firebaseAuthController.registerUser);

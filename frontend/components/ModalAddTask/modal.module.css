@@ -75,6 +75,12 @@
     animation: spin 2s linear infinite;
 }
 
+.containerCheckbox{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
