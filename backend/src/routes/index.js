@@ -10,6 +10,7 @@ const verifyToken = require('../middleware/verifyToken');
 const TaskController = require('../controllers/tasksController');
 
 const GeneratePDFController = require('../controllers/generate-pdf');
+const TaskController = require('../controllers/task-controller');
 
 
 // Rotas públicas
@@ -33,6 +34,8 @@ router.get('/api/transcriptions', verifyToken, TranscriptionController.getTransc
 router.get('/api/transcriptions/:id/download', verifyToken, TranscriptionController.downloadTranscription);
 router.get('/transcriptions/daily-limit', verifyToken, TranscriptionController.getDailyLimit);
 router.get('/generate-pdf', GeneratePDFController.generatePDF);
+router.post('/tasks', TaskController.createTask);
+
 
 
 // Rotas para Tasks
