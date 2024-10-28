@@ -28,10 +28,10 @@ class TranscriptionController {
       
 
       // Iniciar processamento assíncrono
-      await TranscriptionController.processTranscription(transcription, file.path);
+      const response = await TranscriptionController.processTranscription(transcription, file.path);
 
       // Responde imediatamente ao usuário que o arquivo foi recebido e será processado
-      res.status(200).json(transcription.transcriptionText);
+      res.status(200).json(response);
     } catch (error) {
       // Em caso de erro ao criar a transcrição, aparece o erro e responde com erro 500
       console.error('Erro ao criar transcrição:', error);
@@ -91,13 +91,11 @@ class TranscriptionController {
       await transcription.save();
 
       // Chama a função para criar tarefas a partir da transcrição
-      await TranscriptionController.createTasksFromTranscription(transcription.id);
-
-      const tasks = Task.findAll()
-      console.log(tasks)
+      const response = await TranscriptionController.createTasksFromTranscription(transcription.id);
 
       console.log('Transcrição concluída e salva no banco de dados.');
 
+      return response
     } catch (error) {
       // Em caso de erro, registra a falha e atualiza o status da transcrição para "falha"
       console.error('Erro ao processar transcrição:', error);
@@ -219,6 +217,7 @@ static async createTasksFromTranscription(transcriptionId) {
     }
 
     console.log('Todas as tarefas foram criadas com sucesso.');
+    return Task.findAll()
   } catch (error) {
     console.error('Erro ao criar tarefas a partir da transcrição:', error);
   }

@@ -1,6 +1,6 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-const Task = require('../models/Task'); 
+const Task = require('../models/task'); 
 
 class GeneratePDFController{
     static async generatePDF(req, res){
