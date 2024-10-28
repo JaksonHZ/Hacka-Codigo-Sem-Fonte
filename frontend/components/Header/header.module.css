@@ -1,0 +1,25 @@
+.header {
+    width: 100%;
+    height: 80px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    background: rgba(0, 59, 122, 0.80);
+    backdrop-filter: blur(25px);
+    color: white;
+}
+
+.header nav ul {
+    display: flex;
+    gap: 20px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.header nav ul li{
+    list-style: none;
+    text-decoration: none;
+}
+
